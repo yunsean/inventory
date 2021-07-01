@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yoga.inventory.goods.mapper.GoodsMapper">
+
+    <select id="list" resultType="com.yoga.inventory.goods.model.Goods">
+        select g.*, c.`name` category
+        from stock_goods g
+        left join stock_category c on c.id = g.category_id
+        where g.tenant_id = #{tenantId} and g.deleted = 0
+        <if test="id != null">
+            and g.id = #{id}
+        </if>
+        <if test="categoryIds != null and categoryIds.size() > 0">
+            and g.category_id in
+            <foreach collection="categoryIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="barcode != null and barcode != ''">
+            and g.barcode = #{barcode}
+        </if>
+        <if test="name != null and name != ''">
+            and g.name like '%${name}%'
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (g.name like '%${keyword}%' or g.spell like '%${keyword}%' or g.initial like '%${keyword}%' or g.trade_mark like '%${keyword}%' or g.manu_name like '%${keyword}%' or g.detail like '%${keyword}%' or g.barcode = #{barcode} or g.code = #{barcode})
+        </if>
+        <if test="remainLess != null and remainLess">
+            and g.threshold > IFNULL(g.remain, 0)
+        </if>
+        <if test="remainLess != null and !remainLess">
+            and g.threshold &lt;= IFNULL(g.remain, 0)
+        </if>
+        <if test="preferAdd != null and preferAdd">
+            and g.preferred > 0 and IFNULL(g.remain, 0) &lt; g.preferred
+        </if>
+        <if test="preferAdd != null and !preferAdd">
+            and g.preferred > 0 and IFNULL(g.remain, 0) >= g.preferred
+        </if>
+        order by g.update_time
+    </select>
+</mapper>

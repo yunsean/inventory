@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yoga.inventory.transaction.mapper.TransactionItemMapper">
+    <insert id="insertItems">
+        insert into stock_transaction_item (transaction_id, goods_id, count) values
+        <foreach collection="list" item="item" separator="," open="" close="" index="">
+            (#{item.transactionId}, #{item.goodsId}, #{item.count})
+        </foreach>
+    </insert>
+    <update id="updateGoods">
+        update stock_goods g,
+        (select count, goods_id from stock_transaction_item where transaction_id = #{transactionId}) cnt
+        <choose>
+            <when test="operate.toString() == 'OUTPUT'">
+                set g.remain = g.remain - cnt.count,
+                g.consumed = g.consumed + cnt.count
+            </when>
+            <otherwise>
+                set g.remain = g.remain + cnt.count,
+                g.inputted = g.inputted + cnt.count
+            </otherwise>
+        </choose>
+        where cnt.goods_id = g.id and g.deleted = 0
+    </update>
+
+    <update id="updateIntend">
+        update stock_intend_item ii,
+        (select count, goods_id from stock_transaction_item where transaction_id = #{transactionId}) cnt
+        set ii.count = ii.count - cnt.count
+        where ii.tenant_id = #{tenantId}
+        and ii.user_id = #{userId}
+        and ii.operate = #{operate}
+        and ii.goods_id = cnt.goods_id
+    </update>
+    <update id="returnGoods">
+        update stock_goods g,
+        (select count, goods_id from stock_transaction_item where transaction_id = #{transactionId}) cnt
+        set g.remain = g.remain + cnt.count,
+        g.consumed = g.consumed - cnt.count
+        where cnt.goods_id = g.id
+    </update>
+
+    <select id="list" resultType="com.yoga.inventory.transaction.model.TransactionItem">
+        select ti.*, g.id goods_id, g.barcode, g.code, g.remain, g.units, g.shelf, g.name name, g.trade_mark, g.manu_name, g.spec, g.image, c.id category_id, c.name category, t.id transaction_id, t.user_id, t.status, t.operate, t.add_time, t.remark, ou.nickname, ou.avatar
+        from stock_transaction_item ti
+        inner join stock_transaction t on t.id = ti.transaction_id
+        left join stock_goods g on g.id = ti.goods_id
+        left join stock_category c on c.id = g.category_id
+        left join operator_user ou on ou.id = t.user_id
+        where t.tenant_id = #{tenantId}
+        <if test="transactionId != null">
+            and ti.transaction_id = #{transactionId}
+        </if>
+        <if test="operate != null">
+            and t.operate = #{operate}
+        </if>
+        <if test="userId != null">
+            and t.user_id = 1
+        </if>
+        <if test="goodsId != null">
+            and ti.goods_id = #{goodsId}
+        </if>
+        <if test="beginDate != null">
+            and t.add_time >= #{beginDate}
+        </if>
+        <if test="endDate != null">
+            and t.add_time &lt;= #{endDate}
+        </if>
+        <if test="barcode != null and barcode != ''">
+            and g.barcode = #{barcode}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (g.name like '%${keyword}%' or g.spell like '%${keyword}%' or g.initial like '%${keyword}%' or g.trade_mark like '%${keyword}%' or g.manu_name like '%${keyword}%' or g.detail like '%${keyword}%' or g.barcode = #{barcode})
+        </if>
+        order by ti.transaction_id desc
+    </select>
+    <select id="understockGoods" resultType="com.yoga.inventory.goods.model.Goods">
+        select g.*
+        from stock_goods g
+        inner join stock_transaction_item ti on ti.goods_id = g.id and ti.transaction_id = #{transactionId}
+        where ti.count > g.remain
+    </select>
+</mapper>

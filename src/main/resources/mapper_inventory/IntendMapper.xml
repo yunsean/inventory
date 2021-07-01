@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yoga.inventory.intend.mapper.IntendMapper">
+
+
+    <select id="get" resultType="com.yoga.inventory.intend.model.Intend">
+        select ii.*, g.id goodsId, g.barcode, g.code, g.remain, g.units, g.name, g.trade_mark, g.manu_name, g.spec, g.image, c.id category_id, c.name category
+        from stock_intend_item ii
+        inner join stock_goods g on g.id = ii.goods_id
+        left join stock_category c on c.id = g.category_id
+        where g.tenant_id = #{tenantId} and g.deleted = 0
+        and ii.user_id = #{userId}
+        <if test="goodsId != null">
+            and ii.goods_id = #{goodsId}
+        </if>
+        <if test="barcode != null and barcode != ''">
+            and g.barcode = #{barcode}
+        </if>
+        and ii.operate = #{operate}
+        limit 1
+    </select>
+    <select id="listUnderstock" resultType="com.yoga.inventory.intend.model.Intend">
+        select ii.*, g.id goods_id, g.barcode, g.code, g.remain, g.units, g.name, g.trade_mark, g.manu_name, g.spec, g.image, c.id category_id, c.name category
+        from stock_intend_item ii
+        left join stock_goods g on g.id = ii.goods_id
+        left join stock_category c on c.id = g.category_id
+        where (g.remain &lt; ii.count or g.deleted)
+        and ii.tenant_id = #{tenantId}
+        and ii.user_id = #{userId}
+        and ii.operate = 'OUTPUT'
+    </select>
+    <select id="list" resultType="com.yoga.inventory.intend.model.Intend">
+        select ii.*, g.id goodsId, g.barcode, g.code, g.remain, g.units, g.name, g.trade_mark, g.manu_name, g.spec, g.image, c.id category_id, c.name category
+        from stock_intend_item ii
+        inner join stock_goods g on g.id = ii.goods_id
+        left join stock_category c on c.id = g.category_id
+        where g.tenant_id = #{tenantId} and g.deleted = 0
+        <if test="userId != null">
+            and ii.user_id = #{userId}
+        </if>
+        <if test="goodsId != null">
+            and ii.goods_id = #{goodsId}
+        </if>
+        <if test="barcode != null and barcode != ''">
+            and g.barcode = #{barcode}
+        </if>
+        <if test="categoryIds != null and categoryIds.size() > 0">
+            and g.category_id in
+            <foreach collection="categoryIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (g.name like '%${keyword}%' or g.spell like '%${keyword}%' or g.initial like '%${keyword}%' or g.trade_mark like '%${keyword}%' or g.manu_name like '%${keyword}%' or g.detail like '%${keyword}%' or g.barcode = #{barcode})
+        </if>
+        <if test="operate != null">
+            and ii.operate = #{operate}
+        </if>
+        order by ii.add_time desc
+    </select>
+</mapper>

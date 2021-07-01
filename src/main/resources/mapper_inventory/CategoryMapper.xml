@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yoga.inventory.category.mapper.CategoryMapper">
+
+    <select id="findChildren" resultType="com.yoga.inventory.category.model.Category">
+        select s.*
+        from (select * from stock_category order by parent_id, id) s, (select @pv := ${parentId}) iv
+        where tenant_id = #{tenantId} and (find_in_set(parent_id, @pv)
+        <if test="includeParentId">
+            or id = @pv
+        </if>
+        ) and length(@pv := concat(@pv, ',', id))
+    </select>
+</mapper>

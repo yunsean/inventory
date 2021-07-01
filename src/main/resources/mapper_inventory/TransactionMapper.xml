@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yoga.inventory.transaction.mapper.TransactionMapper">
+
+    <select id="list" resultType="com.yoga.inventory.transaction.model.Transaction">
+        select t.*, ou.nickname, ou.avatar
+        from stock_transaction t
+        left join operator_user ou on ou.id = t.user_id
+        <if test="goodsId != null">
+            inner join stock_transaction_item ti on ti.transaction_id = t.id and ti.goods_id = #{goodsId}
+        </if>
+        where t.tenant_id = #{tenantId}
+        <if test="userId != null">
+            and t.user_id = #{userId}
+        </if>
+        <if test="beginDate != null">
+            and t.add_time >= #{beginDate}
+        </if>
+        <if test="endDate != null">
+            and t.add_time &lt;= #{endDate}
+        </if>
+        <if test="operate != null">
+            and t.operate = #{operate}
+        </if>
+        <if test="status != null">
+            and t.status = #{status}
+        </if>
+        <if test="user != null and user != ''">
+            and ou.nickname = #{user}
+        </if>
+        GROUP BY t.id
+        ORDER BY t.`status`, t.add_time DESC
+    </select>
+    <select id="get" resultType="com.yoga.inventory.transaction.model.Transaction">
+        select t.*, ou.nickname, ou.avatar
+        from stock_transaction t
+        left join operator_user ou on ou.id = t.user_id
+        where t.tenant_id = #{tenantId}
+        and t.id = #{id}
+    </select>
+</mapper>

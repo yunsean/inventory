@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menus>
+	<menu sort = "5" icon ="icon-carousel" name="资产管理" url="">
+		<module code="inventory_category" sort="1" icon="" name="分类管理" url="/admin/inventory/category">
+			<permissions code="inventory_category.edit" sort = "2" icon = "" name = "修改"  url = ""/>
+		</module>
+		<module code="inventory_goods" sort="2" icon="" name="资产列表" url="/admin/inventory/goods">
+			<permissions code="inventory_goods.edit" sort = "1" icon = "" name = "修改"  url = ""/>
+			<permissions code="inventory_goods.print" sort = "2" icon = "" name = "打印条码"  url = ""/>
+		</module>
+		<module code="inventory_journal" sort ="6" icon="" name= "出入库查询" url="/admin/inventory/transaction/journal" />
+	</menu>
+	<menu sort = "6" icon ="icon-check" name="库存管理" url="">
+		<module code="inventory_input" sort ="3" icon="" name= "资产入库" url="/admin/inventory/input">
+			<permissions code="inventory_input.input" sort = "1" icon = "" name = "入库"  url = ""/>
+		</module>
+		<module code="inventory_output" sort ="3" icon="" name= "提交申请" url="/admin/inventory/output" />
+		<module code="inventory_affirm" sort ="4" icon="" name= "申请列表" url="/admin/inventory/transaction/affirm">
+			<permissions code="inventory_affirm.affirm" sort = "1" icon = "" name = "出库"  url = ""/>
+		</module>
+		<module code="inventory_transaction" sort ="5" icon="" name= "出入库记录" url="/admin/inventory/transaction" />
+	</menu>
+</menus>
